@@ -58,6 +58,7 @@ function gameLoop() {
     updateFood();
     drawFishes();
     drawFood();
+    draw_fish_counter();
 
     if (allFishDead()) {
         drawRestartButton();

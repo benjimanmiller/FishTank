@@ -3,12 +3,12 @@
 let fishes = [];
 
 function initializeFishes() {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 100; i++) {
         const fishWidth = 50;
         const fishHeight = 50;
         fishes.push({
-            x: Math.random() * (canvas.width - fishWidth),
-            y: Math.random() * (canvas.height - fishHeight),
+            x: Math.random() * (canvas.width - fishWidth - 10),
+            y: Math.random() * (canvas.height - fishHeight ),
             width: fishWidth,
             height: fishHeight,
             dx: Math.random() * 2 - 1,
@@ -41,6 +41,24 @@ function updateFishes() {
             // Add horizontal sway with reduced amplitude for dead fish
             fish.x +=
                 Math.sin(fish.y * fish.swayFrequency) * (fish.swayAmplitude * 0.5); // Reduce sway amplitude by half
+                // Check for collisions with other fish
+                for (let j = i + 1; j < fishes.length; j++) {
+                    const otherFish = fishes[j];      if (checkCollision(fish, otherFish)) {
+                        // Basic collision response: reverse directions
+                        const tempDx = fish.dx;
+                        const tempDy = fish.dy;
+                        fish.dx = otherFish.dx;
+                        fish.dy = otherFish.dy;
+                        otherFish.dx = tempDx;
+                        otherFish.dy = tempDy;
+
+                        // Move fish slightly apart to prevent overlapping
+                        fish.x += fish.dx;
+                        fish.y += fish.dy;
+                        otherFish.x += otherFish.dx;
+                        otherFish.y += otherFish.dy;
+                    }
+                } 
             return; // Skip further updates for dead fish
         }
 
@@ -59,10 +77,29 @@ function updateFishes() {
         });
 
         // If there is a closest food within the radius, swim towards it
-        if (closestFood) {
+        if (closestFood && closestFood.x >= 0 && closestFood.x <= canvas.width && closestFood.y >= 0 && closestFood.y <= canvas.height) {
             const angle = Math.atan2(closestFood.y - fish.y, closestFood.x - fish.x);
-            fish.dx = Math.cos(angle) * 3; // Increase speed
-            fish.dy = Math.sin(angle) * 3; // Increase speed
+            fish.dx = Math.cos(angle) * 2; // Increase speed
+            fish.dy = Math.sin(angle) * 2; // Increase speed
+
+            // Check for collisions with other fish
+            for (let j = i + 1; j < fishes.length; j++) {
+                const otherFish = fishes[j];      if (checkCollision(fish, otherFish)) {
+                    // Basic collision response: reverse directions
+                    const tempDx = fish.dx;
+                    const tempDy = fish.dy;
+                    fish.dx = otherFish.dx;
+                    fish.dy = otherFish.dy;
+                    otherFish.dx = tempDx;
+                    otherFish.dy = tempDy;
+
+                    // Move fish slightly apart to prevent overlapping
+                    fish.x += fish.dx;
+                    fish.y += fish.dy;
+                    otherFish.x += otherFish.dx;
+                    otherFish.y += otherFish.dy;
+                }
+            }        
         } else {
             // Gradually change direction for more natural movement if no food is close
             fish.dx += Math.random() * 0.2 - 0.1;
@@ -87,7 +124,7 @@ function updateFishes() {
 
         // Bounce the fish off the left and right edges of the canvas
         if (fish.x < 0 || fish.x + fish.width > canvas.width) {
-            fish.dx *= -1;
+            fish.dx *= -5;
         }
 
         // Prevent the fish from moving off the top and bottom edges of the canvas
@@ -220,7 +257,9 @@ function drawFishes() {
 }
 
 function allFishDead() {
-    return fishes.length === 0;
+    // Filter out dead fish
+    const aliveFishes = fishes.filter(fish => !fish.dead);
+    return aliveFishes.length === 0;
 }
 
 function checkCollision(fish1, fish2) {
